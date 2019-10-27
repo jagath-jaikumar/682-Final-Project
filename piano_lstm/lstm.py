@@ -1,5 +1,3 @@
-""" This module prepares midi file data and feeds it to the neural
-    network for training """
 import glob
 import pickle
 import numpy
@@ -13,20 +11,13 @@ from keras.utils import np_utils
 from keras.callbacks import ModelCheckpoint
 
 def train_network():
-    """ Train a Neural Network to generate music """
     notes = get_notes()
-
-    # get amount of pitch names
     n_vocab = len(set(notes))
-
     network_input, network_output = prepare_sequences(notes, n_vocab)
-
     model = create_network(network_input, n_vocab)
-
     train(model, network_input, network_output)
 
 def get_notes():
-    """ Get all the notes and chords from the midi files in the ./midi_songs directory """
     notes = []
 
     for file in glob.glob("midi_songs/*.mid"):
@@ -36,10 +27,10 @@ def get_notes():
 
         notes_to_parse = None
 
-        try: # file has instrument parts
+        try: 
             s2 = instrument.partitionByInstrument(midi)
             notes_to_parse = s2.parts[0].recurse() 
-        except: # file has notes in a flat structure
+        except:
             notes_to_parse = midi.flat.notes
 
         for element in notes_to_parse:
@@ -54,19 +45,14 @@ def get_notes():
     return notes
 
 def prepare_sequences(notes, n_vocab):
-    """ Prepare the sequences used by the Neural Network """
     sequence_length = 100
-
-    # get all pitch names
     pitchnames = sorted(set(item for item in notes))
 
-     # create a dictionary to map pitches to integers
     note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
 
     network_input = []
     network_output = []
 
-    # create input sequences and the corresponding outputs
     for i in range(0, len(notes) - sequence_length, 1):
         sequence_in = notes[i:i + sequence_length]
         sequence_out = notes[i + sequence_length]
@@ -75,9 +61,7 @@ def prepare_sequences(notes, n_vocab):
 
     n_patterns = len(network_input)
 
-    # reshape the input into a format compatible with LSTM layers
     network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
-    # normalize input
     network_input = network_input / float(n_vocab)
 
     network_output = np_utils.to_categorical(network_output)
@@ -106,7 +90,7 @@ def create_network(network_input, n_vocab):
 
 def train(model, network_input, network_output):
     """ train the neural network """
-    filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
+    filepath = "weights-improvement-{epoch:02d}.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',
