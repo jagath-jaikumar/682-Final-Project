@@ -26,13 +26,13 @@ def get_notes():
     dic = data.set_index('song_title').T.to_dict('list')
 
     notes = []
-    
+
     network_input = []
     network_output = []
 
     num_notes = 0
 
-    for file in glob.glob("midi_songs/training_subset/*.mid"):
+    for file in glob.glob("midi_songs/*.mid"):
         midi = converter.parse(file)
         song_name = str(file).split("/")[-1]
 

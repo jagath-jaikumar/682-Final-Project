@@ -15,15 +15,18 @@ sequence_length = 100
 
 
 def generate(filename):
-    network_input = get_notes(filename)
+    network_input,pitchnames = get_notes(filename)
     model = create_network(network_input)
-    label = prediction(model, network_input)
+    # numpy.reshape(network_input, (sequence_length, -1))
+    # print(network_input.shape)
+    network_input = numpy.array([network_input])
+    label = prediction(filename, model, network_input)
 
 def get_notes(filename):
 
     midi = converter.parse(filename)
     notes = []
-    
+
 
     network_input = []
 
@@ -60,9 +63,9 @@ def get_notes(filename):
 
 def create_network(network_input):
     """ create the structure of the neural network """
-    print(len(network_input[0]))
+    print(len(network_input))
     model = Sequential()
-    model.add(Dense(128, activation='relu',))
+    model.add(Dense(128, activation='relu',input_shape = (sequence_length,) ))
     model.add(Dense(10, activation='softmax'))
     model.add(Dense(1))
     model.compile(loss='binary_crossentropy', optimizer='rmsprop')
@@ -72,11 +75,17 @@ def create_network(network_input):
     return model
 
 
-def prediction(model, network_input):
-    label = model.predict(network_input)
-    print(label)
+def prediction(filename, model, network_input):
+    label = int(numpy.round(model.predict(network_input)[0][0]))
+    category = ""
+    if label == 1:
+        category = 'light'
+    else:
+        category = 'dark'
+    print("SONG : {}".format(filename))
+    print("LABEL : {}".format(category))
 
 
 if __name__ == '__main__':
-    filename = "midi_songs/8.mid"
+    filename = "midi_songs/0fithos.mid"
     generate(filename)

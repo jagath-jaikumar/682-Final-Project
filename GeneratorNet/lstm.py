@@ -20,7 +20,7 @@ def train_network():
 def get_notes():
     notes = []
 
-    for file in glob.glob("midi_songs/training_sample/*.mid"):
+    for file in glob.glob("midi_songs/*.mid"):
         midi = converter.parse(file)
 
         print("Parsing %s" % file)
@@ -91,7 +91,7 @@ def create_network(network_input, n_vocab):
 def train(model, network_input, network_output):
     """ train the neural network """
     filepath = "weights-improvement-{epoch:02d}.hdf5"
-    bs = 32
+    bs = 64
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',
