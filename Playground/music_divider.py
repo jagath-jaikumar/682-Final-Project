@@ -9,8 +9,6 @@ if __name__ == "__main__":
 
     dic = data.set_index('song_title').T.to_dict('list')
 
-    print(dic)
-
     for file in glob.glob("../Data/midi_songs/*.mid"):
         song_name = str(file).split("/")[-1]
         category = dic[song_name][0]
