@@ -1,11 +1,11 @@
 import pickle
 import numpy
 from music21 import instrument, note, stream, chord
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Dropout
-from keras.layers import LSTM
-from keras.layers import Activation
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import Activation
 
 def generate():
     with open('data/notes', 'rb') as filepath:
@@ -57,7 +57,7 @@ def create_network(network_input, n_vocab):
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-    model.load_weights('weights.hdf5')
+    model.load_weights('weights-improvement-38.hdf5')
 
     return model
 
