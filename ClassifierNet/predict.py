@@ -60,8 +60,9 @@ def get_notes(filename):
 
 def create_network(network_input):
     """ create the structure of the neural network """
+    print(len(network_input[0]))
     model = Sequential()
-    model.add(Dense(128, activation='relu',input_dim=network_input[0]))
+    model.add(Dense(128, activation='relu',))
     model.add(Dense(10, activation='softmax'))
     model.add(Dense(1))
     model.compile(loss='binary_crossentropy', optimizer='rmsprop')
