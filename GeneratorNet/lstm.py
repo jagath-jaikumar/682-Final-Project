@@ -10,12 +10,11 @@ from tensorflow.keras.layers import Activation
 from tensorflow.keras import utils as np_utils
 from tensorflow.keras.callbacks import ModelCheckpoint
 
+
 def train_network():
     notes = get_notes()
-    n_vocab = len(set(notes))
-    network_input, network_output = prepare_sequences(notes, n_vocab)
-    model = create_network(network_input, n_vocab)
-    train(model, network_input, network_output)
+    return notes
+
 
 def get_notes():
     notes = []
@@ -41,15 +40,13 @@ def get_notes():
 
     with open('data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
-
     return notes
+
 
 def prepare_sequences(notes, n_vocab):
     sequence_length = 100
     pitchnames = sorted(set(item for item in notes))
-
     note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
-
     network_input = []
     network_output = []
 
@@ -60,13 +57,11 @@ def prepare_sequences(notes, n_vocab):
         network_output.append(note_to_int[sequence_out])
 
     n_patterns = len(network_input)
-
     network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
     network_input = network_input / float(n_vocab)
-
     network_output = np_utils.to_categorical(network_output)
-
     return (network_input, network_output)
+
 
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
@@ -85,8 +80,8 @@ def create_network(network_input, n_vocab):
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
-
     return model
+
 
 def train(model, network_input, network_output):
     """ train the neural network """
@@ -100,8 +95,15 @@ def train(model, network_input, network_output):
         mode='min'
     )
     callbacks_list = [checkpoint]
-
     model.fit(network_input, network_output, epochs=200, batch_size=bs, callbacks=callbacks_list)
 
+
 if __name__ == '__main__':
-    train_network()
+    # notes = train_network()
+    # Getting back the objects:
+    with open('objs.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+        network_input, network_output = pickle.load(f)
+    n_vocab = len(set(notes))
+    network_input, network_output = prepare_sequences(notes, n_vocab)
+    model = create_network(network_input, n_vocab)
+    train(model, network_input, network_output)
