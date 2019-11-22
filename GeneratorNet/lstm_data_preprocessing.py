@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import random
 import sys
+import tensorflow.keras.utils as utils
 from music21 import converter, instrument, note, chord
 
 
@@ -46,6 +47,9 @@ def map_light_songs_to_notes():
                 lstm_val_out.append(note_mapping[next_note])
         index += 1
 
+    lstm_train_out = utils.to_categorical(lstm_train_out)
+    lstm_val_out = utils.to_categorical(lstm_val_out)
+
     with open('lstm_light.pkl', 'wb') as f:
         pickle.dump([lstm_train_in, lstm_train_out, lstm_val_in, lstm_val_out], f)
 
@@ -85,6 +89,8 @@ def map_dark_songs_to_notes():
                 lstm_val_in.append([note_mapping[char] for char in sequence_in])
                 lstm_val_out.append(note_mapping[next_note])
         index += 1
+    lstm_train_out = utils.to_categorical(lstm_train_out)
+    lstm_val_out = utils.to_categorical(lstm_val_out)
 
     with open('lstm_dark.pkl', 'wb') as f:
         pickle.dump([lstm_train_in, lstm_train_out, lstm_val_in, lstm_val_out], f)
@@ -118,8 +124,8 @@ def map_inputs_to_output():
     validation_outputs_l = np.asarray(lstm_val_out_l)
     n_patterns = len(training_inputs_l)
     training_inputs_l = np.reshape(training_inputs_l, (n_patterns, sequence_length, 1))
-    n_patterns = len(lstm_val_in_l)
-    validation_inputs_l = np.reshape(lstm_val_in_l, (n_patterns, sequence_length, 1))
+    n_patterns = len(validation_inputs_l)
+    validation_inputs_l = np.reshape(validation_inputs_l, (n_patterns, sequence_length, 1))
 
     # DARK
     training_inputs_d = np.asarray(lstm_train_in_d) / float(1)

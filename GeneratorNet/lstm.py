@@ -9,6 +9,7 @@ from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Activation
 from tensorflow.keras import utils as np_utils
+from tensorflow.keras.layers import BatchNormalization as BatchNorm
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 
@@ -41,23 +42,18 @@ def light_hyperparameter_tuning():
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    for layer in model.layers:
+        print(layer.output_shape)
     model.fit(training_inputs, training_outputs, validation_data=(validation_inputs, validation_outputs),
               epochs=300, batch_size=bs, shuffle=True, verbose=2)  # , callbacks=[checkpoint])
-    # y_pred = model.predict(x_val)
-    # y_pred = np.argmax(y_pred, axis=1)
-    # y_real = np.argmax(y_val, axis=1)
-    # cm = confusion_matrix(y_real, y_pred)
-    # print(cm)
-    # precision = cm[0][0] / (np.sum(cm[0]))
-    # recall = cm[0][0] / (np.sum(cm[0][0] + cm[1][0]))
-    # f_measure = (2*recall*precision)/(recall+precision)
-    # print("Precision = ", precision)
-    # print("Recall = ", recall)
-    # print("f-measure = ", f_measure)
 
 
 # Create Dark LSTM
 def dark_hyperparameter_tuning():
+    with open('notes.pkl', 'rb') as f:
+        note_mapping = pickle.load(f)
+    n_vocab = len(set(note_mapping))
+    print(n_vocab)
     with open('lstm_dark.pkl', 'rb') as f:
         training_inputs, training_outputs, validation_inputs, validation_outputs = pickle.load(f)
     print(training_inputs.shape, training_outputs.shape)
@@ -71,11 +67,23 @@ def dark_hyperparameter_tuning():
         mode='min'
     )
     model = Sequential()
-    model.add(LSTM(512, return_sequences=True))
-    # model.add(Activation('softmax'))
+    model.add(LSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
+                   recurrent_dropout=0.3, return_sequences=True))
+    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.3, ))
+    model.add(LSTM(512))
+    model.add(BatchNorm())
+    model.add(Dropout(0.3))
+    model.add(Dense(256))
+    model.add(Activation('relu'))
+    model.add(BatchNorm())
+    model.add(Dropout(0.3))
+    model.add(Dense(n_vocab))
+    model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    for layer in model.layers:
+        print(layer.output_shape)
     model.fit(training_inputs, training_outputs, validation_data=(validation_inputs, validation_outputs),
-              epochs=150, batch_size=100, shuffle=True, verbose=1)  # , callbacks=[checkpoint])
+              epochs=150, batch_size=128, shuffle=True, verbose=1)  # , callbacks=[checkpoint])
 
 
 if __name__ == '__main__':
