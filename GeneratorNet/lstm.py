@@ -6,6 +6,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import CuDNNLSTM
+from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Activation
 from tensorflow.keras import utils as np_utils
 from tensorflow.keras.callbacks import ModelCheckpoint
@@ -66,15 +67,15 @@ def prepare_sequences(notes, n_vocab):
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
-    model.add(CuDNNLSTM(
+    model.add(LSTM(
         512,
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
     ))
     model.add(Dropout(0.3))
-    model.add(CuDNNLSTM(512, return_sequences=True))
+    model.add(LSTM(512, return_sequences=True))
     model.add(Dropout(0.3))
-    model.add(CuDNNLSTM(512))
+    model.add(LSTM(512))
     model.add(Dense(256))
     model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
@@ -97,6 +98,9 @@ def train(model, network_input, network_output):
     callbacks_list = [checkpoint]
     model.fit(network_input, network_output, epochs=200, batch_size=bs, callbacks=callbacks_list)
 
+
+# Create Light LSTM
+# Create Dark LSTM
 
 if __name__ == '__main__':
     # notes = train_network()

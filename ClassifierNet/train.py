@@ -29,19 +29,21 @@ def hyperparameter_tuning():
         mode='min'
     )
     # nothing above .001, GOOD LR = .00001
-    for l_rate in [.00001, .0001, .001]:
-        for bs in [100, 150, 200]:
+    # [.00001, .0001, .001]
+    for l_rate in [.001]:
+        # [100, 150, 200]
+        for bs in [150]:
             model = Sequential()
             model.add(Dense(128, kernel_initializer='glorot_normal', activation='relu'))
-            model.add(Dense(128, kernel_initializer='glorot_normal', activation='relu'))
+            # model.add(Dense(128, kernel_initializer='glorot_normal', activation='relu'))
             model.add(Dense(64, kernel_initializer='glorot_normal', activation='relu'))
-            model.add(Dense(64, kernel_initializer='glorot_normal', activation='relu'))
+            # model.add(Dense(64, kernel_initializer='glorot_normal', activation='relu'))
             model.add(Dense(32, kernel_initializer='glorot_normal', activation='relu'))
-            model.add(Dense(16, kernel_initializer='glorot_normal', activation='relu'))
+            # model.add(Dense(16, kernel_initializer='glorot_normal', activation='relu'))
             model.add(Dense(2, kernel_initializer='glorot_normal', activation='softmax'))
             adam = optimizers.Adam(lr=l_rate, beta_1=0.9, beta_2=0.999, amsgrad=False)
             model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['categorical_accuracy'])
-            model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=200, batch_size=bs, shuffle=True,
+            model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=300, batch_size=bs, shuffle=True,
                       verbose=2)#, callbacks=[checkpoint])
             y_pred = model.predict(x_val)
             y_pred = np.argmax(y_pred, axis=1)
