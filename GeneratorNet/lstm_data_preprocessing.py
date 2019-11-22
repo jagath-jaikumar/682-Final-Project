@@ -112,24 +112,24 @@ def map_inputs_to_output():
     lstm_val_in_d, lstm_val_out_d = zip(*c)
 
     # LIGHT
-    training_inputs_l = np.asarray(lstm_train_in_l)
+    training_inputs_l = np.asarray(lstm_train_in_l) / float(1)
     training_outputs_l = np.asarray(lstm_train_out_l)
-    validation_inputs_l = np.asarray(lstm_val_in_l)
+    validation_inputs_l = np.asarray(lstm_val_in_l) / float(1)
     validation_outputs_l = np.asarray(lstm_val_out_l)
     n_patterns = len(training_inputs_l)
-    training_inputs_l = np.reshape(training_inputs_l, (n_patterns, sequence_length))
+    training_inputs_l = np.reshape(training_inputs_l, (n_patterns, sequence_length, 1))
     n_patterns = len(lstm_val_in_l)
-    validation_inputs_l = np.reshape(lstm_val_in_l, (n_patterns, sequence_length))
+    validation_inputs_l = np.reshape(lstm_val_in_l, (n_patterns, sequence_length, 1))
 
     # DARK
-    training_inputs_d = np.asarray(lstm_train_in_d)
+    training_inputs_d = np.asarray(lstm_train_in_d) / float(1)
     training_outputs_d = np.asarray(lstm_train_out_d)
-    validation_inputs_d = np.asarray(lstm_val_in_d)
+    validation_inputs_d = np.asarray(lstm_val_in_d) / float(1)
     validation_outputs_d = np.asarray(lstm_val_out_d)
     n_patterns = len(training_inputs_d)
-    training_inputs_d = np.reshape(training_inputs_d, (n_patterns, sequence_length))
+    training_inputs_d = np.reshape(training_inputs_d, (n_patterns, sequence_length, 1))
     n_patterns = len(lstm_val_in_d)
-    validation_inputs_d = np.reshape(lstm_val_in_d, (n_patterns, sequence_length))
+    validation_inputs_d = np.reshape(lstm_val_in_d, (n_patterns, sequence_length, 1))
 
     with open('lstm_light.pkl', 'wb') as f:
         pickle.dump([training_inputs_l, training_outputs_l, validation_inputs_l, validation_outputs_l], f)
@@ -138,5 +138,6 @@ def map_inputs_to_output():
 
 
 if __name__ == '__main__':
-    # map_dark_songs_to_notes()
+    map_light_songs_to_notes()
+    map_dark_songs_to_notes()
     map_inputs_to_output()
