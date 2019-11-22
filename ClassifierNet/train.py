@@ -16,10 +16,8 @@ sequence_length = 100
 
 
 def hyperparameter_tuning():
-    with open('final_training_data.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
-        x_train, y_train = pickle.load(f)
-    with open('final_validation_data.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
-        x_val, y_val = pickle.load(f)
+    with open('../Data/classification_train_val_data.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+        x_train, y_train, x_val, y_val = pickle.load(f)
     filepath = "classification-improvement-{epoch:02d}.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,

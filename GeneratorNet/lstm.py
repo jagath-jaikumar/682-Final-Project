@@ -54,7 +54,7 @@ def dark_hyperparameter_tuning():
         note_mapping = pickle.load(f)
     n_vocab = len(set(note_mapping))
     print(n_vocab)
-    with open('lstm_dark.pkl', 'rb') as f:
+    with open('../Data/lstm_dark_data.pkl', 'rb') as f:
         training_inputs, training_outputs, validation_inputs, validation_outputs = pickle.load(f)
     print(training_inputs.shape, training_outputs.shape)
 
