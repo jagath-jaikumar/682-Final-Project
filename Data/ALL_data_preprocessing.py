@@ -12,7 +12,7 @@ sequence_length = 100
 
 
 def get_notes():
-    notes = []
+    pitches = []
     # get the notes from all the midi files and enumerate them
     for file in glob.glob("midi_songs/*.mid"):
         midi = converter.parse(file)
@@ -26,15 +26,15 @@ def get_notes():
 
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                notes.append(str(element.pitch))
+                pitches.append(element.pitch.ps)
             elif isinstance(element, chord.Chord):
-                notes.append('.'.join(str(n) for n in element.normalOrder))
-    notes = set(notes)
-    pitchnames = sorted(item for item in notes)
-    # mapping of chords/notes to values - this is what the sequences need to use
-    note_to_int = dict((note1, number) for number, note1 in enumerate(pitchnames))
+                # chord.pitches
+                for pitch in element.pitches:
+                    pitches.append(pitch.ps)
+    all_possible_note_frequencies = list(set(pitches))
+    all_notes = np.arange(len(all_possible_note_frequencies))
     with open('notes.pkl', 'wb') as f:
-        pickle.dump([notes, note_to_int], f)
+        pickle.dump([all_possible_note_frequencies], f)
 
 
 def map_songs_to_notes():
@@ -45,7 +45,7 @@ def map_songs_to_notes():
     dark_lstm_val_out = []
     dark_class_val_out = []
     with open('notes.pkl', 'rb') as f:
-        all_notes, note_mapping = pickle.load(f)
+        all_notes = pickle.load(f)
 
     train_indices = np.random.choice(39, 31, replace=False)
     index = 0
@@ -60,23 +60,29 @@ def map_songs_to_notes():
             notes_to_parse = midi.flat.notes
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                notes_for_song.append(str(element.pitch))
+                notes_for_song.append(element.pitch.ps)
             elif isinstance(element, chord.Chord):
-                notes_for_song.append('.'.join(str(n) for n in element.normalOrder))
+                for pitch in element.pitches:
+                    notes_for_song.append(pitch.ps)
         for i in range(len(notes_for_song) - sequence_length):
             sequence_in = notes_for_song[i:i + sequence_length]
             next_note = notes_for_song[i + sequence_length]
             if index in train_indices:
-                dark_train_in.append([note_mapping[char] for char in sequence_in])
+                dark_train_in.append(sequence_in)
                 dark_class_train_out.append(0)
-                dark_lstm_train_out.append(note_mapping[next_note])
+                dark_lstm_train_out.append(next_note)
             else:
-                dark_val_in.append([note_mapping[char] for char in sequence_in])
+                dark_val_in.append(sequence_in)
                 dark_class_val_out.append(0)
-                dark_lstm_val_out.append(note_mapping[next_note])
+                dark_lstm_val_out.append(next_note)
         index += 1
-    dark_lstm_train_out = utils.to_categorical(dark_lstm_train_out)
-    dark_lstm_val_out = utils.to_categorical(dark_lstm_val_out)
+    orig_len = len(dark_lstm_train_out)
+    for pitch in all_notes[0]:
+        dark_lstm_train_out.append(pitch)
+    dark_lstm_train_out = utils.to_categorical(dark_lstm_train_out)[0:orig_len]
+    for pitch in all_notes[0]:
+        dark_lstm_val_out.append(pitch)
+    dark_lstm_val_out = utils.to_categorical(dark_lstm_val_out)[0:orig_len]
     length = len(dark_class_train_out)
     dark_class_train_out.append(1)
     dark_class_train_out = utils.to_categorical(dark_class_train_out)
@@ -118,26 +124,31 @@ def map_songs_to_notes():
             notes_to_parse = midi.flat.notes
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                notes_for_song.append(str(element.pitch))
+                notes_for_song.append(element.pitch.ps)
             elif isinstance(element, chord.Chord):
-                notes_for_song.append('.'.join(str(n) for n in element.normalOrder))
+                for pitch in element.pitches:
+                    notes_for_song.append(pitch.ps)
         for i in range(len(notes_for_song) - sequence_length):
             sequence_in = notes_for_song[i:i + sequence_length]
             next_note = notes_for_song[i + sequence_length]
             if index in train_indices:
-                light_train_in.append([note_mapping[char] for char in sequence_in])
+                light_train_in.append(sequence_in)
                 light_class_train_out.append(1)
-                light_lstm_train_out.append(note_mapping[next_note])
+                light_lstm_train_out.append(next_note)
             else:
-                light_val_in.append([note_mapping[char] for char in sequence_in])
+                light_val_in.append(sequence_in)
                 light_class_val_out.append(1)
-                light_lstm_val_out.append(note_mapping[next_note])
+                light_lstm_val_out.append(next_note)
         index += 1
-    light_lstm_train_out = utils.to_categorical(light_lstm_train_out)
-    light_lstm_val_out = utils.to_categorical(light_lstm_val_out)
+    orig_len = len(dark_lstm_train_out)
+    for pitch in all_notes[0]:
+        light_lstm_train_out.append(pitch)
+    light_lstm_train_out = utils.to_categorical(light_lstm_train_out)[0:orig_len]
+    for pitch in all_notes[0]:
+        light_lstm_val_out.append(pitch)
+    light_lstm_val_out = utils.to_categorical(light_lstm_val_out)[0:orig_len]
     light_class_train_out = utils.to_categorical(light_class_train_out)
     light_class_val_out = utils.to_categorical(light_class_val_out)
-
     a = list(zip(light_train_in, light_lstm_train_out))
     b = list(zip(light_train_in, light_class_train_out))
     c = list(zip(light_val_in, light_lstm_val_out))
@@ -165,12 +176,12 @@ def map_songs_to_notes():
     # DARK
     training_inputs_d = np.asarray(dark_train_in_lstm) / float(1)
     training_outputs_d = np.asarray(dark_lstm_train_out)
-    lstm_val_in_d = np.asarray(dark_val_in_lstm) / float(1)
+    validation_inputs_d = np.asarray(dark_val_in_lstm) / float(1)
     validation_outputs_d = np.asarray(dark_lstm_val_out)
     n_patterns = len(training_inputs_d)
     training_inputs_d = np.reshape(training_inputs_d, (n_patterns, sequence_length, 1))
-    n_patterns = len(lstm_val_in_d)
-    validation_inputs_d = np.reshape(lstm_val_in_d, (n_patterns, sequence_length, 1))
+    n_patterns = len(validation_inputs_d)
+    validation_inputs_d = np.reshape(validation_inputs_d, (n_patterns, sequence_length, 1))
 
     print("Light LSTM")
     print(training_inputs_l.shape, training_outputs_l.shape)

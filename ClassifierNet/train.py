@@ -2,10 +2,10 @@ import pickle
 import numpy as np
 import random
 import sys
-from music21 import converter, instrument, note, chord
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import BatchNormalization as BatchNorm
 from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.callbacks import ModelCheckpoint
@@ -18,6 +18,7 @@ sequence_length = 100
 def hyperparameter_tuning():
     with open('../Data/classification_train_val_data.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
         x_train, y_train, x_val, y_val = pickle.load(f)
+    print(x_train.shape, y_train.shape)
     filepath = "classification-improvement-{epoch:02d}.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
@@ -28,20 +29,22 @@ def hyperparameter_tuning():
     )
     # nothing above .001, GOOD LR = .00001
     # [.00001, .0001, .001]
-    for l_rate in [.001]:
+    for l_rate in [.0001]:
         # [100, 150, 200]
-        for bs in [150]:
+        for bs in [125]:
             model = Sequential()
-            model.add(Dense(128, kernel_initializer='glorot_normal', activation='relu'))
-            # model.add(Dense(128, kernel_initializer='glorot_normal', activation='relu'))
-            model.add(Dense(64, kernel_initializer='glorot_normal', activation='relu'))
-            # model.add(Dense(64, kernel_initializer='glorot_normal', activation='relu'))
-            model.add(Dense(32, kernel_initializer='glorot_normal', activation='relu'))
-            # model.add(Dense(16, kernel_initializer='glorot_normal', activation='relu'))
-            model.add(Dense(2, kernel_initializer='glorot_normal', activation='softmax'))
+            model.add(Dense(100, input_shape=(x_train.shape[1],), kernel_initializer='random_normal', activation='relu'))
+            model.add(Dense(60, kernel_initializer='random_normal', activation='relu'))
+            model.add(Dropout(.5))
+            model.add(Dense(60, kernel_initializer='random_normal', activation='relu'))
+            # model.add(BatchNorm())
+            model.add(Dense(45, kernel_initializer='random_normal', activation='relu'))
+            model.add(Dropout(.5))
+            model.add(Dense(20, kernel_initializer='random_normal', activation='relu'))
+            model.add(Dense(2, kernel_initializer='random_normal', activation='softmax'))
             adam = optimizers.Adam(lr=l_rate, beta_1=0.9, beta_2=0.999, amsgrad=False)
             model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['categorical_accuracy'])
-            model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=300, batch_size=bs, shuffle=True,
+            model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=200, batch_size=bs, shuffle=True,
                       verbose=2)#, callbacks=[checkpoint])
             y_pred = model.predict(x_val)
             y_pred = np.argmax(y_pred, axis=1)
