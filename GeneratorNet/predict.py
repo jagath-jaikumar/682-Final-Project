@@ -13,8 +13,9 @@ sequence_length = 100
 use_cuda = True
 
 def generate(feeling):
-    with open('data/notes', 'rb') as filepath:
+    with open('../Data/notes.pkl', 'rb') as filepath:
         notes = pickle.load(filepath)
+    notes = notes[0]
     print(notes)
     pitchnames = sorted(set(item for item in notes))
     n_vocab = len(set(notes))
