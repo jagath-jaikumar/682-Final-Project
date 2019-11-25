@@ -27,12 +27,13 @@ def hyperparameter_tuning(feeling):
         with open('../Data/lstm_dark_data.pkl', 'rb') as f:
             training_inputs, training_outputs, validation_inputs, validation_outputs = pickle.load(f)
         print(training_inputs.shape, training_outputs.shape)
+        filepath = "weights/Dark-LSTM-improvement-{epoch:02d}.hdf5"
     else:
         with open('../Data/lstm_light.pkl', 'rb') as f:
             training_inputs, training_outputs, validation_inputs, validation_outputs = pickle.load(f)
         print(training_inputs.shape, training_outputs.shape)
 
-    filepath = "weights/Light-LSTM-improvement-{epoch:02d}.hdf5"
+        filepath = "weights/Light-LSTM-improvement-{epoch:02d}.hdf5"
     if save_all:
         checkpoint = ModelCheckpoint(
             filepath,
@@ -54,7 +55,7 @@ def hyperparameter_tuning(feeling):
         model.add(CuDNNLSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
                         return_sequences=True))
         model.add(CuDNNLSTM(512, return_sequences=True, ))
-        model.add(CuDNNLSTM(512))
+        model.add(CuDNNLSTeM(512))
     else:
         model.add(LSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
                        recurrent_dropout=0.3, return_sequences=True))

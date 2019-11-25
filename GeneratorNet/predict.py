@@ -5,13 +5,14 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import LSTM
+from tensorflow.keras.layers import CuDNNLSTM
 from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import BatchNormalization as BatchNorm
 
 sequence_length = 100
+use_cuda = True
 
-
-def generate():
+def generate(feeling):
     with open('data/notes', 'rb') as filepath:
         notes = pickle.load(filepath)
     print(notes)
@@ -19,7 +20,7 @@ def generate():
     n_vocab = len(set(notes))
 
     network_input, normalized_input = prepare_sequences(notes, pitchnames, n_vocab)
-    model = create_network(normalized_input, n_vocab)
+    model = create_network(normalized_input, n_vocab, feeling)
     prediction_output = generate_notes(model, network_input, pitchnames, n_vocab)
     print(prediction_output)
     create_midi(prediction_output)
@@ -45,24 +46,32 @@ def prepare_sequences(notes, pitchnames, n_vocab):
 
     return (network_input, normalized_input)
 
-def create_network(training_inputs, n_vocab):
+def create_network(training_inputs, n_vocab,feeling):
     model = Sequential()
-    model.add(LSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
-                   recurrent_dropout=0.3, return_sequences=True))
-    model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.3, ))
-    model.add(LSTM(512))
+    if use_cuda:
+        model.add(CuDNNLSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
+                        return_sequences=True))
+        model.add(CuDNNLSTM(512, return_sequences=True, ))
+        model.add(CuDNNLSTeM(512))
+    else:
+        model.add(LSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
+                       recurrent_dropout=0.3, return_sequences=True))
+        model.add(LSTM(512, return_sequences=True, recurrent_dropout=0.3, ))
+        model.add(LSTM(512))
     model.add(BatchNorm())
     model.add(Dropout(0.3))
     model.add(Dense(256))
     model.add(Activation('relu'))
     model.add(BatchNorm())
     model.add(Dropout(0.3))
-    model.add(Dense(353)) # should be n_vocab but is wrong dimension?
+    model.add(Dense(99)) # should be n_vocab but is wrong dimension?
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-    model.load_weights('dark-LSTM-improvement-150.hdf5')
-
+    if feeling == 'dark':
+        model.load_weights('dark-LSTM-improvement-150.hdf5')
+    else:
+        model.load_weights('light-LSTM-improvement-150.hdf5')
     return model
 
 def generate_notes(model, network_input, pitchnames, n_vocab):
@@ -83,11 +92,11 @@ def generate_notes(model, network_input, pitchnames, n_vocab):
 
 
         prediction = model.predict(prediction_input, verbose=0)
+        index = numpy.argmax(prediction[0])
 
-        index = numpy.argmax(prediction)
-        print(prediction[index])
+
         result = int_to_note[index]
-        print(result)
+
         prediction_output.append(result)
 
         pattern.append(index)
@@ -124,4 +133,4 @@ def create_midi(prediction_output):
     midi_stream.write('midi', fp='test_output.mid')
 
 if __name__ == '__main__':
-    generate()
+    generate(feeling='dark')
