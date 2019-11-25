@@ -21,9 +21,9 @@ save_all = True
 
 
 def hyperparameter_tuning(feeling):
-    with open('notes.pkl', 'rb') as f:
+    with open('../Data/notes.pkl', 'rb') as f:
         note_mapping = pickle.load(f)
-    n_vocab = len(set(note_mapping))
+    n_vocab = len(note_mapping)
     print(n_vocab)
 
     if feeling == 'dark':
@@ -58,7 +58,7 @@ def hyperparameter_tuning(feeling):
         model.add(CuDNNLSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
                         return_sequences=True))
         model.add(CuDNNLSTM(512, return_sequences=True, ))
-        model.add(CuDNNLSTeM(512))
+        model.add(CuDNNLSTM(512))
     else:
         model.add(LSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
                        recurrent_dropout=0.3, return_sequences=True))

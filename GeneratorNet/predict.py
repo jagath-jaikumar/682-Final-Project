@@ -24,7 +24,6 @@ def generate(feeling):
 
     prediction_output = generate_notes(model, network_input, notes)
 
-    print(prediction_output)
     create_midi(prediction_output)
 
 def prepare_sequences(notes):
@@ -54,7 +53,7 @@ def create_network(training_inputs, n_vocab,feeling):
     model.add(Activation('relu'))
     model.add(BatchNorm())
     model.add(Dropout(0.3))
-    model.add(Dense(353)) # should be n_vocab but is wrong dimension?
+    model.add(Dense(99)) # should be n_vocab but is wrong dimension?
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
