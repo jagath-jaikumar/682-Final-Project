@@ -18,8 +18,11 @@ def generate(feeling):
         notes = pickle.load(filepath)
     notes = notes[0]
     print(notes)
-    pitchnames = sorted(set(item for item in notes))
+
     n_vocab = len(set(notes))
+
+    print(pitchnames)
+    print(n_vocab)
 
     network_input, normalized_input = prepare_sequences(notes, pitchnames, n_vocab)
     model = create_network(normalized_input, n_vocab, feeling)
@@ -28,23 +31,13 @@ def generate(feeling):
     create_midi(prediction_output)
 
 def prepare_sequences(notes, pitchnames, n_vocab):
-
-    note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
-
-
     network_input = []
-    output = []
-    for i in range(0, len(notes) - sequence_length, 1):
-        sequence_in = notes[i:i + sequence_length]
-        sequence_out = notes[i + sequence_length]
-        network_input.append([note_to_int[char] for char in sequence_in])
-        output.append(note_to_int[sequence_out])
 
-    n_patterns = len(network_input)
+    for i in range(sequence_length):
+        sequence_in = notes[numpy.random.randint(0, len(sequence_in)-1)]
+        network_input.append(sequence_in)
 
-    normalized_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
-
-    return (network_input, normalized_input)
+    return network_input
 
 def create_network(training_inputs, n_vocab,feeling):
     model = Sequential()
