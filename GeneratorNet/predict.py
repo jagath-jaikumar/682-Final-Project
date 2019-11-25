@@ -52,7 +52,7 @@ def create_network(training_inputs, n_vocab,feeling):
         model.add(CuDNNLSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
                         return_sequences=True))
         model.add(CuDNNLSTM(512, return_sequences=True, ))
-        model.add(CuDNNLSTeM(512))
+        model.add(CuDNNLSTM(512))
     else:
         model.add(LSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
                        recurrent_dropout=0.3, return_sequences=True))
@@ -94,6 +94,7 @@ def generate_notes(model, network_input, pitchnames, n_vocab):
         prediction = model.predict(prediction_input, verbose=0)
         index = numpy.argmax(prediction[0])
 
+        print(prediction[0][index])
 
         result = int_to_note[index]
 
