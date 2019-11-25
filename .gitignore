@@ -4,3 +4,4 @@ GeneratorNet/*.hdf5
 ClassifierNet/*.hdf5
 GeneratorNet/.gitattributes
 GeneratorNet/.DS_Store
+GeneratorNet/weights/
