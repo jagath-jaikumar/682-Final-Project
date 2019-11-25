@@ -23,13 +23,13 @@ def generate(feeling):
     # print(int_to_ps)
     # print(ps_to_note_name)
 
-    network_input = prepare_input_sequences(all_notes)
+    network_input = prepare_input_sequence(all_notes)
     model = create_network(network_input, len(all_notes), feeling)
     prediction_output = generate_notes(model, network_input, int_to_ps, ps_to_note_name)
     create_midi(prediction_output)
 
 
-def prepare_input_sequences(all_notes):
+def prepare_input_sequence(all_notes):
     network_input = []
 
     for i in range(sequence_length):
@@ -68,7 +68,7 @@ def create_network(training_inputs, n_vocab, feeling):
     return model
 
 
-def generate_notes(model, network_input, notes, int_to_ps, ps_to_note_name):
+def generate_notes(model, network_input, int_to_ps, ps_to_note_name):
     prediction_output = []
     pattern = network_input
 
@@ -86,6 +86,23 @@ def generate_notes(model, network_input, notes, int_to_ps, ps_to_note_name):
         prediction_output.append(note_name)
 
     return prediction_output
+
+
+def generate_next_note(model, network_input, int_to_ps, ps_to_note_name):
+    pattern = network_input
+
+    new_prediction = model.predict(pattern, verbose=0)
+    index = np.argmax(new_prediction)
+
+    # Adding predicted note to generate the next input
+    ps_value = int_to_ps[index]
+    pattern.append(ps_value)
+    pattern = pattern[1:]
+
+    # Adding note to prediction output
+    note_name = ps_to_note_name[ps_value]
+
+    return note_name, pattern
 
 
 def create_midi(prediction_output):
