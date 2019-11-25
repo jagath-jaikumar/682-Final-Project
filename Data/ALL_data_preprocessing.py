@@ -13,6 +13,7 @@ sequence_length = 100
 
 def get_notes():
     pitches = []
+    ps_to_note_name = {}
     # get the notes from all the midi files and enumerate them
     for file in glob.glob("midi_songs/*.mid"):
         midi = converter.parse(file)
@@ -27,14 +28,18 @@ def get_notes():
         for element in notes_to_parse:
             if isinstance(element, note.Note):
                 pitches.append(element.pitch.ps)
+                ps_to_note_name[element.pitch.ps] = str(element.pitch)
             elif isinstance(element, chord.Chord):
                 # chord.pitches
                 for pitch in element.pitches:
                     pitches.append(pitch.ps)
+                    ps_to_note_name[pitch.ps] = str(pitch)
     all_possible_note_frequencies = list(set(pitches))
-    all_notes = np.arange(len(all_possible_note_frequencies))
+    all_possible_note_frequencies.sort()
+    ps_to_int = dict((ps, number) for number, ps in enumerate(all_possible_note_frequencies))
+    int_to_ps = dict((number, ps) for number, ps in enumerate(all_possible_note_frequencies))
     with open('notes.pkl', 'wb') as f:
-        pickle.dump([all_possible_note_frequencies], f)
+        pickle.dump([all_possible_note_frequencies, ps_to_int, int_to_ps, ps_to_note_name], f)
 
 
 def map_songs_to_notes():
@@ -45,7 +50,7 @@ def map_songs_to_notes():
     dark_lstm_val_out = []
     dark_class_val_out = []
     with open('notes.pkl', 'rb') as f:
-        all_notes = pickle.load(f)
+        all_notes, ps_to_int, int_to_ps, ps_to_note_name = pickle.load(f)
 
     train_indices = np.random.choice(39, 31, replace=False)
     index = 0
@@ -70,27 +75,16 @@ def map_songs_to_notes():
             if index in train_indices:
                 dark_train_in.append(sequence_in)
                 dark_class_train_out.append(0)
-                dark_lstm_train_out.append(next_note)
+                dark_lstm_train_out.append(ps_to_int[next_note])
             else:
                 dark_val_in.append(sequence_in)
                 dark_class_val_out.append(0)
-                dark_lstm_val_out.append(next_note)
+                dark_lstm_val_out.append(ps_to_int[next_note])
         index += 1
-    orig_len = len(dark_lstm_train_out)
-    for pitch in all_notes[0]:
-        dark_lstm_train_out.append(pitch)
-    dark_lstm_train_out = utils.to_categorical(dark_lstm_train_out)[0:orig_len]
-    for pitch in all_notes[0]:
-        dark_lstm_val_out.append(pitch)
-    dark_lstm_val_out = utils.to_categorical(dark_lstm_val_out)[0:orig_len]
-    length = len(dark_class_train_out)
-    dark_class_train_out.append(1)
-    dark_class_train_out = utils.to_categorical(dark_class_train_out)
-    dark_class_train_out = dark_class_train_out[0:length]
-    length = len(dark_class_val_out)
-    dark_class_val_out.append(1)
-    dark_class_val_out = utils.to_categorical(dark_class_val_out)
-    dark_class_val_out = dark_class_val_out[0:length]
+    dark_lstm_train_out = utils.to_categorical(dark_lstm_train_out, num_classes=81)
+    dark_lstm_val_out = utils.to_categorical(dark_lstm_val_out, num_classes=81)
+    dark_class_train_out = utils.to_categorical(dark_class_train_out, num_classes=2)
+    dark_class_val_out = utils.to_categorical(dark_class_val_out, num_classes=2)
 
     a = list(zip(dark_train_in, dark_lstm_train_out))
     b = list(zip(dark_train_in, dark_class_train_out))
@@ -134,21 +128,16 @@ def map_songs_to_notes():
             if index in train_indices:
                 light_train_in.append(sequence_in)
                 light_class_train_out.append(1)
-                light_lstm_train_out.append(next_note)
+                light_lstm_train_out.append(ps_to_int[next_note])
             else:
                 light_val_in.append(sequence_in)
                 light_class_val_out.append(1)
-                light_lstm_val_out.append(next_note)
+                light_lstm_val_out.append(ps_to_int[next_note])
         index += 1
-    orig_len = len(dark_lstm_train_out)
-    for pitch in all_notes[0]:
-        light_lstm_train_out.append(pitch)
-    light_lstm_train_out = utils.to_categorical(light_lstm_train_out)[0:orig_len]
-    for pitch in all_notes[0]:
-        light_lstm_val_out.append(pitch)
-    light_lstm_val_out = utils.to_categorical(light_lstm_val_out)[0:orig_len]
-    light_class_train_out = utils.to_categorical(light_class_train_out)
-    light_class_val_out = utils.to_categorical(light_class_val_out)
+    light_lstm_train_out = utils.to_categorical(light_lstm_train_out, num_classes=81)
+    light_lstm_val_out = utils.to_categorical(light_lstm_val_out, num_classes=81)
+    light_class_train_out = utils.to_categorical(light_class_train_out, num_classes=2)
+    light_class_val_out = utils.to_categorical(light_class_val_out, num_classes=2)
     a = list(zip(light_train_in, light_lstm_train_out))
     b = list(zip(light_train_in, light_class_train_out))
     c = list(zip(light_val_in, light_lstm_val_out))
@@ -239,5 +228,5 @@ def map_songs_to_notes():
 
 
 if __name__ == '__main__':
-    # get_notes()
+    get_notes()
     map_songs_to_notes()

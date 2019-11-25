@@ -1,14 +1,11 @@
 import glob
 import pickle
-import numpy
-from music21 import converter, instrument, note, chord
+import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
-
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Activation
-from tensorflow.keras import utils as np_utils
 from tensorflow.keras.layers import BatchNormalization as BatchNorm
 from tensorflow.keras.callbacks import ModelCheckpoint
 
@@ -22,8 +19,8 @@ save_all = True
 
 def hyperparameter_tuning(feeling):
     with open('../Data/notes.pkl', 'rb') as f:
-        note_mapping = pickle.load(f)
-    n_vocab = len(note_mapping)
+        all_notes, ps_to_int, int_to_ps, ps_to_note_name = pickle.load(f)
+    n_vocab = len(all_notes)
     print(n_vocab)
 
     if feeling == 'dark':
@@ -36,7 +33,7 @@ def hyperparameter_tuning(feeling):
             training_inputs, training_outputs, validation_inputs, validation_outputs = pickle.load(f)
         print(training_inputs.shape, training_outputs.shape)
 
-        filepath = "weights/Light-LSTM-improvement-{epoch:02d}.hdf5"
+        filepath = "weights/Dark-LSTM-improvement-{epoch:02d}.hdf5"
     if save_all:
         checkpoint = ModelCheckpoint(
             filepath,
@@ -70,7 +67,7 @@ def hyperparameter_tuning(feeling):
     model.add(Activation('relu'))
     model.add(BatchNorm())
     model.add(Dropout(0.3))
-    model.add(Dense(99)) # n_vocab
+    model.add(Dense(n_vocab)) # Should be 81 because there are 81 notes the output can be
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     for layer in model.layers:
@@ -80,13 +77,11 @@ def hyperparameter_tuning(feeling):
                   epochs=150, batch_size=128, shuffle=True, verbose=1, callbacks=[checkpoint])
     else:
         model.fit(training_inputs, training_outputs, validation_data=(validation_inputs, validation_outputs),
-                  epochs=150, batch_size=128, shuffle=True, verbose=1) #, callbacks=[checkpoint])
+                  epochs=1, batch_size=128, shuffle=True, verbose=1) #, callbacks=[checkpoint])
 
 
 if __name__ == '__main__':
     hyperparameter_tuning(feeling="dark")
-
-
 
 
 # Create Light LSTM
