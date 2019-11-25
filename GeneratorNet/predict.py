@@ -83,10 +83,9 @@ def generate_notes(model, network_input, pitchnames, n_vocab):
 
 
         prediction = model.predict(prediction_input, verbose=0)
-        print(numpy.sum(prediction))
 
         index = numpy.argmax(prediction)
-        print(index)
+        print(prediction[index])
         result = int_to_note[index]
         print(result)
         prediction_output.append(result)

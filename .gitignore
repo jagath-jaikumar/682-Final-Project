@@ -1,6 +1,6 @@
 GeneratorNet/__pycache__
 GeneratorNet/new_weights.hdf5
-GeneratorNet/*.hdf5
+GeneratorNet/
 ClassifierNet/*.hdf5
 GeneratorNet/.gitattributes
 GeneratorNet/.DS_Store
