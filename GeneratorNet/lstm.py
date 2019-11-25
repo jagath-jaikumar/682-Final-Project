@@ -5,7 +5,7 @@ from music21 import converter, instrument, note, chord
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import CuDNNLSTM
+
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Activation
 from tensorflow.keras import utils as np_utils
@@ -14,6 +14,9 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 
 
 use_cuda = True
+if use_cuda:
+    from tensorflow.keras.layers import CuDNNLSTM
+
 save_all = True
 
 

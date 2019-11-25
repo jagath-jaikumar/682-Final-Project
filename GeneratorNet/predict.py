@@ -5,12 +5,13 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import LSTM
-from tensorflow.keras.layers import CuDNNLSTM
 from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import BatchNormalization as BatchNorm
 
 sequence_length = 100
 use_cuda = True
+if use_cuda:
+    from tensorflow.keras.layers import CuDNNLSTM
 
 def generate(feeling):
     with open('../Data/notes.pkl', 'rb') as filepath:
@@ -43,8 +44,6 @@ def prepare_sequences(notes, pitchnames, n_vocab):
 
     normalized_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
 
-    normalized_input = normalized_input / float(n_vocab)
-
     return (network_input, normalized_input)
 
 def create_network(training_inputs, n_vocab,feeling):
@@ -65,7 +64,7 @@ def create_network(training_inputs, n_vocab,feeling):
     model.add(Activation('relu'))
     model.add(BatchNorm())
     model.add(Dropout(0.3))
-    model.add(Dense(99)) # should be n_vocab but is wrong dimension?
+    model.add(Dense(353)) # should be n_vocab but is wrong dimension?
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
