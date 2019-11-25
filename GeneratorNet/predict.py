@@ -17,20 +17,17 @@ def generate(feeling):
     with open('../Data/notes.pkl', 'rb') as filepath:
         notes = pickle.load(filepath)
     notes = notes[0]
-    print(notes)
 
-    n_vocab = len(set(notes))
+    network_input, normalized_input = prepare_sequences(notes)
 
-    print(pitchnames)
-    print(n_vocab)
+    model = create_network(normalized_input, feeling)
 
-    network_input, normalized_input = prepare_sequences(notes, pitchnames, n_vocab)
-    model = create_network(normalized_input, n_vocab, feeling)
-    prediction_output = generate_notes(model, network_input, pitchnames, n_vocab)
+    prediction_output = generate_notes(model, network_input, notes)
+
     print(prediction_output)
     create_midi(prediction_output)
 
-def prepare_sequences(notes, pitchnames, n_vocab):
+def prepare_sequences(notes):
     network_input = []
 
     for i in range(sequence_length):
@@ -67,37 +64,21 @@ def create_network(training_inputs, n_vocab,feeling):
         model.load_weights('light-LSTM-improvement-150.hdf5')
     return model
 
-def generate_notes(model, network_input, pitchnames, n_vocab):
-    start = numpy.random.randint(0, len(network_input)-1)
-    print("pitchnamnes")
-    print(pitchnames)
-    int_to_note = dict((number, note) for number, note in enumerate(pitchnames))
+def generate_notes(model, network_input,notes):
 
-
-    print('int to note')
-    print(int_to_note)
-    pattern = network_input[start]
     prediction_output = []
-    prev_prediction = 0
-    for note_index in range(5):
-        prediction_input = numpy.reshape(pattern, (1, len(pattern), 1))
-        prediction_input = prediction_input / float(n_vocab)
 
-
-        prediction = model.predict(prediction_input, verbose=0)
-        index = numpy.argmax(prediction[0])
-
-        print(prediction[0][index])
-
-        result = int_to_note[index]
-
+    pattern = network_input
+    for new_note in range(5):
+        new_prediction = model.predict(pattern, verbose = 0)
+        index = numpy.argmax(new_prediction)
+        result = notes[index]
         prediction_output.append(result)
-
-        pattern.append(index)
-        pattern = pattern[1:len(pattern)]
-        prev_prediction = prediction
+        pattern.append(result)
+        pattern = pattern[1:]
 
     return prediction_output
+
 
 def create_midi(prediction_output):
     offset = 0
