@@ -1,91 +1,41 @@
-import glob
-import pickle
-import numpy
-import pandas as pd
-from music21 import converter, instrument, note, chord
+import numpy as np
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import Activation
-from tensorflow.keras import utils as np_utils
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras import optimizers
 
 
 sequence_length = 100
 
 
-def generate(filename):
-    network_input,pitchnames = get_notes(filename)
-    model = create_network(network_input)
-    # numpy.reshape(network_input, (sequence_length, -1))
-    # print(network_input.shape)
-    network_input = numpy.array([network_input])
-    label = prediction(filename, model, network_input)
-
-def get_notes(filename):
-
-    midi = converter.parse(filename)
-    notes = []
-
-
-    network_input = []
-
-    print("Parsing %s" % filename)
-
-    notes_to_parse = None
-
-    try:
-        s2 = instrument.partitionByInstrument(midi)
-        notes_to_parse = s2.parts[0].recurse()
-    except:
-        notes_to_parse = midi.flat.notes
-
-    for element in notes_to_parse:
-        if isinstance(element, note.Note):
-            notes.append(str(element.pitch))
-        elif isinstance(element, chord.Chord):
-            notes.append('.'.join(str(n) for n in element.normalOrder))
-
-    pitchnames = sorted(set(item for item in notes))
-
-    note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
-
-    for i in range(0, len(notes)-sequence_length, 1):
-        sequence_in = notes[i:i + sequence_length]
-        network_input.append([note_to_int[char] for char in sequence_in])
-
-    n_patterns = len(network_input)
-
-    network_input = numpy.reshape(network_input, (n_patterns, sequence_length))
-    network_input = network_input / float(len(notes))
-
-    return network_input[0], pitchnames
-
-def create_network(network_input):
+def create_network():
     """ create the structure of the neural network """
-    print(len(network_input))
+    l_rate = .0001
     model = Sequential()
-    model.add(Dense(128, activation='relu',input_shape = (sequence_length,) ))
-    model.add(Dense(10, activation='softmax'))
-    model.add(Dense(1))
-    model.compile(loss='binary_crossentropy', optimizer='rmsprop')
-
+    model.add(Dense(100, input_shape=(sequence_length,), kernel_initializer='random_normal', activation='relu'))
+    model.add(Dense(60, kernel_initializer='random_normal', activation='relu'))
+    model.add(Dropout(.5))
+    model.add(Dense(60, kernel_initializer='random_normal', activation='relu'))
+    # model.add(BatchNorm())
+    model.add(Dense(45, kernel_initializer='random_normal', activation='relu'))
+    model.add(Dropout(.5))
+    model.add(Dense(20, kernel_initializer='random_normal', activation='relu'))
+    model.add(Dense(2, kernel_initializer='random_normal', activation='softmax'))
+    adam = optimizers.Adam(lr=l_rate, beta_1=0.9, beta_2=0.999, amsgrad=False)
+    model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['categorical_accuracy'])
     model.load_weights('classification-improvement-10.hdf5')
 
     return model
 
 
-def prediction(filename, model, network_input):
-    label = int(numpy.round(model.predict(network_input)[0][0]))
-    category = ""
+def prediction(model, network_input):
+    label = np.argmax(model.predict(network_input))
     if label == 1:
         category = 'light'
     else:
         category = 'dark'
-    print("SONG : {}".format(filename))
-    print("LABEL : {}".format(category))
+    return category
 
 
 if __name__ == '__main__':
-    filename = "midi_songs/0fithos.mid"
-    generate(filename)
+    classifier_network = create_network()

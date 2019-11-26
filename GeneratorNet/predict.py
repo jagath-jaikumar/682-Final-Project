@@ -18,23 +18,23 @@ def generate(feeling):
         notes = pickle.load(filepath)
     notes = notes[0]
 
-    network_input = prepare_sequences(notes)
+    network_input_flat,network_input_shaped = prepare_sequences(notes)
 
-    model = create_network(network_input, feeling)
+    model = create_network(network_input_shaped, feeling)
 
-    prediction_output = generate_notes(model, network_input, notes)
+    prediction_output = generate_notes(model,network_input_flat, notes)
 
     create_midi(prediction_output)
 
 def prepare_sequences(notes):
-    network_input = []
+    network_input_flat = []
 
     for i in range(sequence_length):
         sequence_in = notes[numpy.random.randint(0, len(notes)-1)]
-        network_input.append(sequence_in)
+        network_input_flat.append(sequence_in)
 
-    network_input = numpy.reshape(network_input,(1,sequence_length,1))
-    return network_input
+    network_input_shaped = numpy.reshape(network_input_flat,(1,sequence_length,1))
+    return network_input_flat,network_input_shaped
 
 def create_network(training_inputs,feeling):
     model = Sequential()
@@ -54,26 +54,32 @@ def create_network(training_inputs,feeling):
     model.add(Activation('relu'))
     model.add(BatchNorm())
     model.add(Dropout(0.3))
-    model.add(Dense(99)) # should be n_vocab but is wrong dimension?
+    model.add(Dense(81)) # should be n_vocab but is wrong dimension?
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     if feeling == 'dark':
-        model.load_weights('dark-LSTM-improvement-150.hdf5')
+        model.load_weights('weights/Dark-LSTM-improvement-150.hdf5')
     else:
         model.load_weights('light-LSTM-improvement-150.hdf5')
     return model
 
-def generate_notes(model, network_input,notes):
+def generate_notes(model,network_input_flat,notes):
 
     prediction_output = []
 
-    pattern = network_input
+    pattern = network_input_flat
+
     for new_note in range(5):
+
+        pattern = numpy.reshape(pattern,(1,sequence_length,1))
         new_prediction = model.predict(pattern, verbose = 0)
         index = numpy.argmax(new_prediction)
         result = notes[index]
+        print(result)
         prediction_output.append(result)
+
+        pattern = list(pattern.flatten())
         pattern.append(result)
         pattern = pattern[1:]
 
@@ -84,22 +90,28 @@ def create_midi(prediction_output):
     offset = 0
     output_notes = []
 
-    for pattern in prediction_output:
-        if ('.' in pattern) or pattern.isdigit():
-            notes_in_chord = pattern.split('.')
-            notes = []
-            for current_note in notes_in_chord:
-                new_note = note.Note(int(current_note))
-                new_note.storedInstrument = instrument.Piano()
-                notes.append(new_note)
-            new_chord = chord.Chord(notes)
-            new_chord.offset = offset
-            output_notes.append(new_chord)
-        else:
-            new_note = note.Note(pattern)
-            new_note.offset = offset
-            new_note.storedInstrument = instrument.Piano()
-            output_notes.append(new_note)
+    for n in prediction_output:
+        new_note = note.Note(n)
+        new_note.offset = offset
+        new_note.storedInstrument = instrument.Piano()
+        output_notes.append(new_note)
+
+    # for pattern in prediction_output:
+    #     if ('.' in pattern) or pattern.isdigit():
+    #         notes_in_chord = pattern.split('.')
+    #         notes = []
+    #         for current_note in notes_in_chord:
+    #             new_note = note.Note(int(current_note))
+    #             new_note.storedInstrument = instrument.Piano()
+    #             notes.append(new_note)
+    #         new_chord = chord.Chord(notes)
+    #         new_chord.offset = offset
+    #         output_notes.append(new_chord)
+    #     else:
+    #         new_note = note.Note(pattern)
+    #         new_note.offset = offset
+    #         new_note.storedInstrument = instrument.Piano()
+    #         output_notes.append(new_note)
 
         offset += 0.5
 
