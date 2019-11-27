@@ -59,9 +59,9 @@ def create_network(training_inputs, num_notes, feeling):
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     if feeling == 'dark':
-        model.load_weights('weights/Dark-LSTM-improvement-150.hdf5')
+        model.load_weights('Dark-LSTM-improvement-150.hdf5')
     else:
-        model.load_weights('light-LSTM-improvement-150.hdf5')
+        model.load_weights('Light-LSTM-improvement-150.hdf5')
     return model
 
 
