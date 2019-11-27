@@ -14,14 +14,14 @@ if use_cuda:
     from tensorflow.keras.layers import CuDNNLSTM
 
 
-def generate(feeling):
+def generate(feeling, x=100):
     with open('../Data/notes.pkl', 'rb') as f:
         all_notes, ps_to_int, int_to_ps, ps_to_note_name = pickle.load(f)
 
     notes = all_notes[0]
     network_input_flat, network_input_shaped = prepare_input_sequence(notes)
     model = create_network(network_input_shaped, len(notes), feeling)
-    prediction_output = generate_notes(model, network_input_flat, notes)
+    prediction_output = generate_x_notes(model, network_input_flat, notes, x)
     create_midi(prediction_output)
 
 
@@ -65,11 +65,11 @@ def create_network(training_inputs, num_notes, feeling):
     return model
 
 
-def generate_notes(model, network_input_flat, int_to_ps, ps_to_note_name):
+def generate_x_notes(model, network_input_flat, int_to_ps, ps_to_note_name, x):
     prediction_output = []
     pattern = network_input_flat
 
-    for new_note in range(100):
+    for new_note in range(x):
         pattern = np.reshape(pattern, (1, sequence_length, 1))
         new_prediction = model.predict(pattern, verbose=0)
         index = np.argmax(new_prediction)
@@ -119,4 +119,4 @@ def create_midi(prediction_output):
 
 
 if __name__ == '__main__':
-    generate(feeling='dark')
+    generate(feeling='dark', x=100)
