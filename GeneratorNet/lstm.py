@@ -94,7 +94,7 @@ def hyperparameter_tuning(feeling):
 
 
 if __name__ == '__main__':
-    hyperparameter_tuning(feeling="light")
+    hyperparameter_tuning(feeling="dark")
 
 
 # Create Light LSTM
