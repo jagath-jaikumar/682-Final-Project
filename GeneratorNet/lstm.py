@@ -9,6 +9,7 @@ from tensorflow.keras.layers import Activation
 from tensorflow.keras.layers import BatchNormalization as BatchNorm
 from tensorflow.keras.callbacks import ModelCheckpoint
 
+import matplotlib.pyplot as plt
 
 use_cuda = True
 if use_cuda:
@@ -73,12 +74,59 @@ def hyperparameter_tuning(feeling):
     for layer in model.layers:
         print(layer.output_shape)
     if save_all:
-        model.fit(training_inputs, training_outputs, validation_data=(validation_inputs, validation_outputs),
-                  epochs=150, batch_size=128, shuffle=True, verbose=1, callbacks=[checkpoint])
-    else:
-        model.fit(training_inputs, training_outputs, validation_data=(validation_inputs, validation_outputs),
-                  epochs=1, batch_size=128, shuffle=True, verbose=1) #, callbacks=[checkpoint])
+        if feeling == 'dark':
+            history = model.fit(training_inputs, training_outputs, validation_data=(validation_inputs, validation_outputs),
+                      validation_split = 0.25,epochs=150, batch_size=128, shuffle=True, verbose=1, callbacks=[checkpoint])
+        else:
+            history = model.fit(training_inputs, training_outputs, validation_data=(validation_inputs, validation_outputs),
+                      validation_split = 0.25,epochs=250, batch_size=128, shuffle=True, verbose=1, callbacks=[checkpoint])
+
+    # print(history.history)
+    # Plot training & validation loss values
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Test'], loc='upper left')
+    plt.savefig('ModelLoss={}.png'.format(feeling))
+    plt.show()
 
 
 if __name__ == '__main__':
     hyperparameter_tuning(feeling="light")
+
+
+# Create Light LSTM
+# def light_hyperparameter_tuning():
+#     with open('lstm_light.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+#         training_inputs, training_outputs, validation_inputs, validation_outputs = pickle.load(f)
+#
+#     filepath = "Light-LSTM-improvement-{epoch:02d}.hdf5"
+#     checkpoint = ModelCheckpoint(
+#         filepath,
+#         monitor='loss',
+#         verbose=0,
+#         save_best_only=True,
+#         mode='min'
+#     )
+#     # nothing above .001, GOOD LR = .00001
+#     model = Sequential()
+#     model.add(LSTM(
+#         512,
+#         input_shape=(network_input.shape[1], network_input.shape[2]),
+#         return_sequences=True
+#     ))
+#     model.add(Dropout(0.3))
+#     model.add(LSTM(512, return_sequences=True))
+#     model.add(Dropout(0.3))
+#     model.add(LSTM(512))
+#     model.add(Dense(256))
+#     model.add(Dropout(0.3))
+#     model.add(Dense(n_vocab))
+#     model.add(Activation('softmax'))
+#     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+#     for layer in model.layers:
+#         print(layer.output_shape)
+#     model.fit(training_inputs, training_outputs, validation_data=(validation_inputs, validation_outputs),
+#               epochs=300, batch_size=bs, shuffle=True, verbose=2)  # , callbacks=[checkpoint])
