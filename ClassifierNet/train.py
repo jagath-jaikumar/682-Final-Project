@@ -19,12 +19,12 @@ def hyperparameter_tuning():
     with open('../Data/classification_train_val_data.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
         x_train, y_train, x_val, y_val = pickle.load(f)
     print(x_train.shape, y_train.shape)
-    filepath = "classification-improvement-{epoch:02d}.hdf5"
+    filepath = "weights/classification-improvement-{epoch:02d}.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',
         verbose=0,
-        save_best_only=True,
+        save_best_only=False,
         mode='min'
     )
     # nothing above .001, GOOD LR = .00001
@@ -45,7 +45,7 @@ def hyperparameter_tuning():
             adam = optimizers.Adam(lr=l_rate, beta_1=0.9, beta_2=0.999, amsgrad=False)
             model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['categorical_accuracy'])
             model.fit(x_train, y_train, validation_data=(x_val, y_val), epochs=200, batch_size=bs, shuffle=True,
-                      verbose=2)#, callbacks=[checkpoint])
+                      verbose=2, callbacks=[checkpoint])
             y_pred = model.predict(x_val)
             y_pred = np.argmax(y_pred, axis=1)
             y_real = np.argmax(y_val, axis=1)

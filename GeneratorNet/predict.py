@@ -17,10 +17,10 @@ def generate(feeling):
     with open('../Data/notes.pkl', 'rb') as filepath:
         notes = pickle.load(filepath)
     notes = notes[0]
-
+    n_vocab = len(notes)
     network_input_flat,network_input_shaped = prepare_sequences(notes)
 
-    model = create_network(network_input_shaped, feeling)
+    model = create_network(network_input_shaped, feeling, n_vocab)
 
     prediction_output = generate_notes(model,network_input_flat, notes)
 
@@ -36,7 +36,7 @@ def prepare_sequences(notes):
     network_input_shaped = numpy.reshape(network_input_flat,(1,sequence_length,1))
     return network_input_flat,network_input_shaped
 
-def create_network(training_inputs,feeling):
+def create_network(training_inputs,feeling, n_vocab):
     model = Sequential()
     if use_cuda:
         model.add(CuDNNLSTM(512, input_shape=(training_inputs.shape[1], training_inputs.shape[2]),
@@ -54,7 +54,7 @@ def create_network(training_inputs,feeling):
     model.add(Activation('relu'))
     model.add(BatchNorm())
     model.add(Dropout(0.3))
-    model.add(Dense(81)) # should be n_vocab but is wrong dimension?
+    model.add(Dense(n_vocab)) # should be n_vocab but is wrong dimension?
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
@@ -70,7 +70,7 @@ def generate_notes(model,network_input_flat,notes):
 
     pattern = network_input_flat
 
-    for new_note in range(5):
+    for new_note in range(100):
 
         pattern = numpy.reshape(pattern,(1,sequence_length,1))
         new_prediction = model.predict(pattern, verbose = 0)
