@@ -16,12 +16,11 @@ if use_cuda:
 
 def generate(feeling, x=100):
     with open('../Data/notes.pkl', 'rb') as f:
-        all_notes, ps_to_int, int_to_ps, ps_to_note_name = pickle.load(f)
+        notes, ps_to_int, int_to_ps, ps_to_note_name = pickle.load(f)
 
-    notes = all_notes[0]
     network_input_flat, network_input_shaped = prepare_input_sequence(notes)
     model = create_network(network_input_shaped, len(notes), feeling)
-    prediction_output = generate_x_notes(model, network_input_flat, notes, x)
+    prediction_output = generate_x_notes(model, network_input_flat, int_to_ps, ps_to_note_name, x)
     create_midi(prediction_output)
 
 
@@ -115,8 +114,8 @@ def create_midi(prediction_output):
         output_notes.append(new_note)
         offset += 0.5
     midi_stream = stream.Stream(output_notes)
-    midi_stream.write('midi', fp='test_output.mid')
+    midi_stream.write('midi', fp='light4.mid')
 
 
 if __name__ == '__main__':
-    generate(feeling='dark', x=100)
+    generate(feeling='light', x=100)
