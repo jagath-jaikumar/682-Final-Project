@@ -1,5 +1,5 @@
 import pickle
-import numpy
+import numpy as np
 from GeneratorNet import predict as GenNet
 from ClassifierNet import predict as ClassNet
 
@@ -14,7 +14,7 @@ def initialize_all():
     light_generator = GenNet.create_network(network_input_shaped, "light", len(all_notes))
     dark_generator = GenNet.create_network(network_input_shaped, "dark", len(all_notes))
     classifier = ClassNet.create_network()
-    return light_generator, dark_generator, classifier, network_input_shaped, all_notes
+    return light_generator, dark_generator, classifier, network_input_shaped
 
 
 def run_models(light_generator, dark_generator, classifier, network_input, song_length):
@@ -27,29 +27,30 @@ def run_models(light_generator, dark_generator, classifier, network_input, song_
     j = 1
     i = 0
     while i < song_length:
-        class_input = numpy.reshape(curr_input, (1, sequence_length))
+        class_input = np.reshape(curr_input, (1, sequence_length))
         print("classifier")
         print(class_input.shape)
         if classifier.predict(class_input) == "dark":
             print("predicted dark")
             while j % query_interval != 0:
-                print(curr_input.shape)
                 note_name, pattern = GenNet.generate_next_note(dark_generator, curr_input, int_to_ps, ps_to_note_name)
                 full_output.append(note_name)
                 curr_input = list(curr_input.flatten())
                 curr_input.append(pattern)
                 curr_input = curr_input[-100:]
-                curr_input = numpy.reshape(curr_input, (1, 100, 1))
+                curr_input = np.reshape(curr_input, (1, 100, 1))
                 j += 1
                 i += 1
         else:
+            print("predicted light")
             while j % query_interval != 0:
+                print(type(curr_input), j)
                 note_name, pattern = GenNet.generate_next_note(light_generator, curr_input, int_to_ps, ps_to_note_name)
                 full_output.append(note_name)
                 curr_input = list(curr_input.flatten())
                 curr_input.append(pattern)
                 curr_input = curr_input[-100:]
-                curr_input = numpy.reshape(curr_input, (1, 100, 1))
+                curr_input = np.reshape(curr_input, (1, 100, 1))
                 j += 1
                 i += 1
         print("done with iteration ", i+1)
@@ -58,11 +59,10 @@ def run_models(light_generator, dark_generator, classifier, network_input, song_
 
 if __name__ == '__main__':
     for i in range(5):
-        light_generator, dark_generator, classifier, network_input, all_notes = initialize_all()
+        light_generator, dark_generator, classifier, network_input = initialize_all()
         song_length = 100
         generated_song, moods = run_models(light_generator, dark_generator, classifier, network_input, song_length)
-        dcount, lcount = 0,0
         filename = "GeneratedSongs/"
-        filename += 'Mixed' + str(1)
+        filename += 'Mixed' + str(i)
 
         GenNet.create_midi(generated_song, filename)
