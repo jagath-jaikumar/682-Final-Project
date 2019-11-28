@@ -12,7 +12,6 @@ def create_network():
     """ create the structure of the neural network """
     l_rate = .0001
     model = Sequential()
-    print(sequence_length)
     model.add(Dense(100, input_shape=(sequence_length,), kernel_initializer='random_normal', activation='relu'))
     model.add(Dense(60, kernel_initializer='random_normal', activation='relu'))
     model.add(Dropout(.5))
@@ -24,7 +23,7 @@ def create_network():
     model.add(Dense(2, kernel_initializer='random_normal', activation='softmax'))
     adam = optimizers.Adam(lr=l_rate, beta_1=0.9, beta_2=0.999, amsgrad=False)
     model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['categorical_accuracy'])
-    # model.load_weights('classification-improvement-10.hdf5')
+    model.load_weights('../ClassifierNet/classification-improvement-200.hdf5')
 
     return model
 
