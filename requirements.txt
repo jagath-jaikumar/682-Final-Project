@@ -35,7 +35,7 @@ mock==3.0.5
 music21==5.7.0
 netifaces==0.10.4
 np-utils==0.5.11.1
-numpy==1.17.3
+numpy==1.22.0
 oauth==1.0.1
 olefile==0.45.1
 pandas==0.25.2
